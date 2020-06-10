@@ -16,7 +16,7 @@ interface IProxyWebView : WebCacheOpenApi {
     fun getWebSetting(): WebSettings
 
     fun getWebUrl(): String?
-    fun loadWebUrl(url: String?, headers: Map<String?, String?>?)
+    fun loadWebUrl(url: String?, headers: Map<String?, String?>? = null)
     fun reloadUrl()
     fun stopLoadingUrl()
     fun posWebUrl(url: String?, params: ByteArray?);
@@ -44,6 +44,7 @@ interface IProxyWebView : WebCacheOpenApi {
     fun setOnWebViewLongClick(onWebViewLongClick: OnWebViewLongClick?)
 
     fun setWebUiManager(webViewUIManager: WebViewUIManager?)
+    fun setDebug(debug: Boolean)
 }
 
 interface OnWebViewLongClick {

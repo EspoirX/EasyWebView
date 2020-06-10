@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.webkit.WebSettings
 import android.webkit.WebView
-import com.lzx.easyweb.AppUtils
+import com.lzx.easyweb.utils.AppUtils
 import com.lzx.easyweb.cache.WebCacheMode
 
 class DefaultWebSettings(

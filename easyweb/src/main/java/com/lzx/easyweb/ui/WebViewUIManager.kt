@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.ColorInt
 import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
 import com.lzx.easyweb.R
@@ -22,25 +21,14 @@ class WebViewUIManager internal constructor(
     private var viewGroup: ViewGroup? = builder.viewGroup
     private var layoutParams: ViewGroup.LayoutParams? = builder.layoutParams
     private val index: Int = builder.index
-    var needProgressBar: Boolean = builder.needProgressBar
-    var isCustomProgressBar: Boolean = builder.isCustomProgressBar
-    var progressView: IProgressView? = builder.progressView
     var errorView: View? = builder.errorView
-    var loadView: View? = builder.loadView
-
-
-    @ColorInt
-    var progressBarColor = builder.progressBarColor
-    var progressBarHeight = builder.progressBarHeight
 
     @LayoutRes
     var errorLayout = builder.errorLayout
+    var errorUrl = builder.errorUrl
 
     @IdRes
     var reloadViewId = builder.reloadViewId
-
-    @LayoutRes
-    var loadLayout = builder.loadLayout
 
     private val activity = builder.activity
 
@@ -95,59 +83,15 @@ class WebViewUIManager internal constructor(
         //
         layout?.bindWebView(proxyWebView)
         //错误显示页面
-        if (errorView != null) {
-            layout?.setErrorView(errorView)
-        }
+        layout?.setErrorView(errorView)
+        layout?.setErrorUrl(errorUrl)
         layout?.setErrorLayoutRes(errorLayout, reloadViewId)
         layout?.createErrorView()
         layout?.hideErrorPage()
-        //加载中页面
-        if (loadView != null) {
-            layout?.setLoadView(loadView)
-        }
-        layout?.setLoadLayoutRes(loadLayout)
-        layout?.createLoadView()
-        layout?.hideLoading()
-
-        if (needProgressBar) {
-            //自定义
-            if (isCustomProgressBar) {
-                if (progressView == null) {
-                    activity?.let {
-                        val defProView = DefaultProgressView(it)
-//                        layout?.addView(defProView, defProView.getProLayoutParams())
-                        progressView = defProView
-                        (defProView as View).visibility = View.GONE
-                    }
-                } else if (progressView is View || progressView is ViewGroup) {
-                    layout?.addView(progressView as View, progressView?.getProLayoutParams())
-                    (progressView as View).visibility = View.GONE
-                } else {
-                    progressView?.hide()
-                }
-            } else {
-                activity?.let {
-                    val defProView = DefaultProgressView(it)
-                    val proLayoutParams = if (progressBarHeight > 0) {
-                        FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            progressBarHeight
-                        )
-                    } else {
-                        defProView.getProLayoutParams()
-                    }
-//                    if (progressBarColor != -1) {
-//                        defProView.setProgressColor(progressBarColor)
-//                    }
-//                    proLayoutParams?.gravity = Gravity.TOP
-                    progressView = defProView
-//                    layout?.addView(defProView, proLayoutParams)
-                    (defProView as View).visibility = View.GONE
-                }
-            }
-        }
         return layout
     }
+
+    fun getFrameLayout(): FrameLayout? = frameLayout
 
     private fun lookupWebView(): View? = if (webView != null) {
         val parentViewGroup = webView!!.parent as ViewGroup?
@@ -157,48 +101,18 @@ class WebViewUIManager internal constructor(
         activity?.let { AndroidWebView(it) }
     }
 
-    fun updateProgress(progress: Int) {
-        when (progress) {
-            0 -> {
-                progressView?.reset()
-            }
-            in 1..10 -> {
-                progressView?.show()
-            }
-            in 11..94 -> {
-                progressView?.show()
-                progressView?.setProgress(progress)
-            }
-            else -> {
-                progressView?.setProgress(progress)
-                progressView?.hide()
-            }
-        }
-    }
-
     class Builder {
         internal var proxyWebView: IProxyWebView? = null
         internal var viewGroup: ViewGroup? = null
         internal var layoutParams: ViewGroup.LayoutParams? = null
         internal var index: Int = 0
-        internal var needProgressBar = false
-        internal var isCustomProgressBar = false
         internal var errorView: View? = null
-        internal var loadView: View? = null
-        internal var progressView: IProgressView? = null
-
-        @ColorInt
-        internal var progressBarColor = -1
-        internal var progressBarHeight = 0
-
+        internal var errorUrl: String? = null
         @LayoutRes
         internal var errorLayout = -1
 
         @IdRes
         internal var reloadViewId = -1
-
-        @LayoutRes
-        internal var loadLayout = -1
 
         internal var activity: Activity? = null
 
@@ -222,28 +136,12 @@ class WebViewUIManager internal constructor(
             this.index = index
         }
 
-        fun setNeedProgressBar(needProgressBar: Boolean, isCustomProgressBar: Boolean) = apply {
-            this.needProgressBar = needProgressBar
-            this.isCustomProgressBar = isCustomProgressBar
-        }
-
-        fun setProgressView(progressView: IProgressView?) =
-            apply { this.progressView = progressView }
-
         fun setErrorView(errorView: View?) = apply {
             this.errorView = errorView
         }
 
-        fun setLoadView(loadView: View?) = apply {
-            this.loadView = loadView
-        }
-
-        fun setProgressBarColor(progressBarColor: Int) = apply {
-            this.progressBarColor = progressBarColor
-        }
-
-        fun setProgressBarHeight(progressBarHeight: Int) = apply {
-            this.progressBarHeight = progressBarHeight
+        fun setErrorUrl(errorUrl: String?) = apply {
+            this.errorUrl = errorUrl
         }
 
         fun setErrorLayout(errorLayout: Int) = apply {
@@ -252,10 +150,6 @@ class WebViewUIManager internal constructor(
 
         fun setReloadViewId(reloadViewId: Int) = apply {
             this.reloadViewId = reloadViewId
-        }
-
-        fun setLoadLayout(loadLayout: Int) = apply {
-            this.loadLayout = loadLayout
         }
 
         fun build(): WebViewUIManager {

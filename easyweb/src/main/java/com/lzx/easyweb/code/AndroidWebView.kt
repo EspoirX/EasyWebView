@@ -55,6 +55,7 @@ class AndroidWebView : WebView,
     private var userWebViewClient: WebViewClient? = null
     private var userWebChromeClient: WebChromeClient? = null
     private var webViewUIManager: WebViewUIManager? = null
+    private var isDebug = false
     private var recycled = false
 
     private fun initWebView() {
@@ -251,21 +252,19 @@ class AndroidWebView : WebView,
         this.webViewUIManager = webViewUIManager
     }
 
+    override fun setDebug(debug: Boolean) {
+        this.isDebug = debug
+    }
+
     override fun setCacheMode(mode: WebCacheMode?) {
-        if (mode == WebCacheMode.NOCACHE || mode == WebCacheMode.DEFAULT) {
-            proxyWebViewClient = null
-            if (userWebViewClient != null) {
-                webViewClient = userWebViewClient
-            }
-        } else {
-            proxyWebViewClient = ProxyWebViewClient(this)
-            if (userWebViewClient != null) {
-                proxyWebViewClient?.setUpProxyClient(userWebViewClient)
-            }
-            proxyWebViewClient?.setCacheMode(mode)
-            super.setWebViewClient(proxyWebViewClient)
+        proxyWebViewClient = ProxyWebViewClient(this, webViewUIManager, isDebug)
+        if (userWebViewClient != null) {
+            proxyWebViewClient?.setUpProxyClient(userWebViewClient)
         }
-        proxyWebChromeClient = ProxyWebChromeClient(webViewUIManager)
+        proxyWebViewClient?.setCacheMode(mode, context)
+        super.setWebViewClient(proxyWebViewClient)
+
+        proxyWebChromeClient = ProxyWebChromeClient(isDebug)
         if (userWebChromeClient != null) {
             proxyWebChromeClient?.setUpProxyChromeClient(userWebChromeClient)
         }

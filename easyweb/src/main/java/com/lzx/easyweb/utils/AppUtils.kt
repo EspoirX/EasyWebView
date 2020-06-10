@@ -1,4 +1,4 @@
-package com.lzx.easyweb
+package com.lzx.easyweb.utils
 
 import android.content.Context
 import android.content.pm.PackageManager

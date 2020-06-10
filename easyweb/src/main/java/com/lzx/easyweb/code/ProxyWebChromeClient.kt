@@ -4,29 +4,41 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Message
+import android.os.SystemClock
+import android.util.Log
 import android.view.View
 import android.webkit.*
 import android.webkit.WebStorage.QuotaUpdater
 import androidx.annotation.RequiresApi
-import com.lzx.easyweb.ui.WebViewUIManager
+import com.lzx.easyweb.EasyWeb
+import com.lzx.easyweb.js.WebTimesJsInterface
 
 class ProxyWebChromeClient constructor(
-    private val uiManager: WebViewUIManager?
+    private val isDebug: Boolean
 ) : WebChromeClient() {
 
     private var mDelegate: WebChromeClient? = null
+    private var first = true
 
     fun setUpProxyChromeClient(webChromeClient: WebChromeClient?) {
         mDelegate = webChromeClient
     }
 
     override fun onProgressChanged(view: WebView?, newProgress: Int) {
-        uiManager?.updateProgress(newProgress)
         mDelegate?.onProgressChanged(view, newProgress) ?: return
         super.onProgressChanged(view, newProgress)
     }
 
     override fun onReceivedTitle(view: WebView?, title: String?) {
+        if (isDebug) {
+            if (first) {
+                Log.i(
+                    WebTimesJsInterface.TAG,
+                    "白屏 time: " + (SystemClock.uptimeMillis() - EasyWeb.startTime)
+                )
+                first = false
+            }
+        }
         mDelegate?.onReceivedTitle(view, title) ?: return
         super.onReceivedTitle(view, title)
     }

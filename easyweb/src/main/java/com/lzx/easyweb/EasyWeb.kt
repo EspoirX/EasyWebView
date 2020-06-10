@@ -2,6 +2,7 @@ package com.lzx.easyweb
 
 import android.app.Activity
 import android.os.Build
+import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import com.lzx.easyweb.builder.WebBuilder
 import com.lzx.easyweb.code.WebValueCallback
@@ -9,6 +10,10 @@ import com.lzx.easyweb.code.WebValueCallback
 class EasyWeb(private val builder: WebBuilder) {
 
     companion object {
+        const val TAG = "EasyWeb_"
+        var startTime = 0L
+        var initStartTime = 0L
+
         fun with(activity: Activity?): WebBuilder {
             if (activity == null) {
                 throw NullPointerException("context can not be null")
@@ -17,6 +22,10 @@ class EasyWeb(private val builder: WebBuilder) {
         }
     }
 
+    init {
+        startTime = SystemClock.uptimeMillis()
+        initStartTime = SystemClock.uptimeMillis()
+    }
 
     fun getWebView() = builder.view
     fun getProxyWebView() = builder.proxyWebView
@@ -32,7 +41,6 @@ class EasyWeb(private val builder: WebBuilder) {
     fun getUrlLoader() = builder.urlLoader
     fun getJsLoader() = builder.jsLoader
     fun isDebug() = builder.isDebug
-
 
     fun loadUrl(
         url: String?,

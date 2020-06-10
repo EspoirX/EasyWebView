@@ -19,19 +19,14 @@ class WebViewParentLayout @JvmOverloads constructor(
 
     private var webView: View? = null
     private var errorView: View? = null
-    private var loadView: View? = null
     private var proxyWebView: IProxyWebView? = null
-
-    @LayoutRes
-    private var loadLayoutRes: Int = R.layout.layout_web_load_page
-
     @LayoutRes
     private var errorLayoutRes: Int = R.layout.layout_web_error_page
+    private var errorUrl: String? = null
 
     @IdRes
     private var clickId = -1
     private var mErrorLayout: FrameLayout? = null
-    private var mLoadLayout: FrameLayout? = null
 
     fun showErrorPage() {
         if (mErrorLayout != null) {
@@ -42,6 +37,10 @@ class WebViewParentLayout @JvmOverloads constructor(
     }
 
     fun createErrorView() {
+        if (!errorUrl.isNullOrEmpty()) {
+            proxyWebView?.loadWebUrl(errorUrl)
+            return
+        }
         if (errorView == null && errorLayoutRes == -1) {
             return
         }
@@ -79,43 +78,12 @@ class WebViewParentLayout @JvmOverloads constructor(
         errorLayoutRes = layoutRes
     }
 
+    fun setErrorUrl(errorUrl: String?) {
+        this.errorUrl = errorUrl
+    }
+
     fun setErrorView(view: View?) {
         errorView = view
-    }
-
-
-    fun showLoading() {
-        if (mLoadLayout != null) {
-            mLoadLayout!!.visibility = View.VISIBLE
-        } else {
-            createLoadView()
-        }
-    }
-
-    fun createLoadView() {
-        if (loadView == null && loadLayoutRes == -1) {
-            return
-        }
-        val frameLayout = FrameLayout(context)
-        if (loadView == null) {
-            LayoutInflater.from(context).inflate(loadLayoutRes, frameLayout, true)
-        } else {
-            frameLayout.addView(loadView)
-        }
-        val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-        this.addView(frameLayout.also { mLoadLayout = it }, lp)
-    }
-
-    fun hideLoading() {
-        mLoadLayout?.visibility = View.GONE
-    }
-
-    fun setLoadView(view: View?) {
-        loadView = view
-    }
-
-    fun setLoadLayoutRes(@LayoutRes layoutRes: Int = R.layout.layout_web_load_page) {
-        loadLayoutRes = layoutRes
     }
 
     fun bindWebView(proxyWebView: IProxyWebView?) {

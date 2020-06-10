@@ -6,16 +6,14 @@ import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.annotation.ColorInt
 import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
-import com.lzx.easyweb.code.*
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.WebCacheMode
+import com.lzx.easyweb.code.*
 import com.lzx.easyweb.js.IJsInterface
 import com.lzx.easyweb.js.JsInterfaceImpl
 import com.lzx.easyweb.js.WebTimesJsInterface
-import com.lzx.easyweb.ui.IProgressView
 import com.lzx.easyweb.ui.WebViewUIManager
 import java.lang.ref.WeakReference
 
@@ -30,7 +28,7 @@ class WebBuilder(activity: Activity) {
     //WebView的父layout
     internal var viewGroup: ViewGroup? = null
     internal var layoutParams: ViewGroup.LayoutParams? = null
-    internal var index: Int = 0
+    private var index: Int = 0
 
     //WebView配置
     internal var webViewClient: WebViewClient? = null
@@ -47,31 +45,45 @@ class WebBuilder(activity: Activity) {
     internal var isDebug = false
 
     //cache
-    internal var cacheMode: WebCacheMode? = null
+    private var cacheMode: WebCacheMode? = null
 
     //UI相关
     internal var uiManager: WebViewUIManager? = null
-    internal var needProgressBar: Boolean = false
-    internal var isCustomProgressBar: Boolean = false
-    internal var errorView: View? = null
-    internal var loadView: View? = null
-
-    @ColorInt
-    internal var progressBarColor = -1
-    internal var progressBarHeight = 0
-    internal var progressView: IProgressView? = null
+    private var errorView: View? = null
 
     @LayoutRes
     internal var errorLayout = -1
 
+    private var errorUrl = ""
+
     @IdRes
     internal var reloadViewId = -1
 
-    @LayoutRes
-    internal var loadLayout = -1
+    fun setWebParent(
+        v: ViewGroup,
+        lp: ViewGroup.LayoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ),
+        index: Int = 0
+    ) = apply {
+        viewGroup = v
+        layoutParams = lp
+        this.index = index
+    }
 
-    fun buildWebUI(): WebUIBuilder {
-        return WebUIBuilder(this)
+    fun addErrorView(@LayoutRes errorLayoutId: Int, @IdRes reloadViewId: Int = -1) = apply {
+        this.errorLayout = errorLayoutId
+        this.reloadViewId = reloadViewId
+    }
+
+    fun addErrorView(errorView: View, @IdRes reloadViewId: Int = -1) = apply {
+        this.errorView = errorView
+        this.reloadViewId = reloadViewId
+    }
+
+    fun addErrorView(errorUrl: String) = apply {
+        this.errorUrl = errorUrl
     }
 
     fun setWebViewClient(webViewClient: WebViewClient?) = apply {
@@ -115,9 +127,6 @@ class WebBuilder(activity: Activity) {
     }
 
     fun ready(): EasyWeb {
-        if (viewGroup == null) {
-            throw NullPointerException("ViewGroup not null,please check your code!")
-        }
         try {
             initWebView()
         } catch (ex: Exception) {
@@ -133,6 +142,7 @@ class WebBuilder(activity: Activity) {
         if (proxyWebView == null) {
             proxyWebView = AndroidWebView(activity)
         }
+
         //WebViewUIManager
         uiManager = WebViewUIManager.Builder()
             .setActivity(activity)
@@ -142,15 +152,11 @@ class WebBuilder(activity: Activity) {
             .setIndex(index)
             .setErrorLayout(errorLayout)
             .setErrorView(errorView)
-            .setLoadLayout(loadLayout)
-            .setLoadView(loadView)
+            .setErrorUrl(errorUrl)
             .setReloadViewId(reloadViewId)
-            .setNeedProgressBar(needProgressBar, isCustomProgressBar)
-            .setProgressBarColor(progressBarColor)
-            .setProgressBarHeight(progressBarHeight)
-            .setProgressView(progressView)
             .build()
 
+        proxyWebView?.setDebug(isDebug)
         proxyWebView?.setWebUiManager(uiManager)
 
         //WebViewClient
@@ -189,7 +195,8 @@ class WebBuilder(activity: Activity) {
         if (jsInterface == null) {
             jsInterface = JsInterfaceImpl(activity, proxyWebView)
         }
-
-        jsInterface?.addJsInterface(WebTimesJsInterface(), "android")
+        if (isDebug) {
+            jsInterface?.addJsInterface(WebTimesJsInterface(), "android")
+        }
     }
 }
