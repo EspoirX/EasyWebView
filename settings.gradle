@@ -1,0 +1,3 @@
+include ':easyweb'
+include ':app'
+rootProject.name = "EasyWebView"
