@@ -10,6 +10,7 @@ import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.WebCacheMode
+import com.lzx.easyweb.cache.interceptor.ResourceInterceptor
 import com.lzx.easyweb.code.*
 import com.lzx.easyweb.js.IJsInterface
 import com.lzx.easyweb.js.JsInterfaceImpl
@@ -46,6 +47,7 @@ class WebBuilder(activity: Activity) {
 
     //cache
     private var cacheMode: WebCacheMode? = null
+    private val interceptors = mutableListOf<ResourceInterceptor?>()
 
     //UI相关
     internal var uiManager: WebViewUIManager? = null
@@ -122,6 +124,10 @@ class WebBuilder(activity: Activity) {
         this.cacheMode = cacheMode
     }
 
+    fun addResourceInterceptor(interceptor: ResourceInterceptor?) = apply {
+        this.interceptors.add(interceptor)
+    }
+
     fun debug(isDebug: Boolean) = apply {
         this.isDebug = isDebug
     }
@@ -176,6 +182,12 @@ class WebBuilder(activity: Activity) {
             cacheMode = WebCacheMode.NOCACHE
         }
         proxyWebView?.setCacheMode(cacheMode)
+        if (interceptors.isNotEmpty()) {
+            interceptors.forEach {
+                proxyWebView?.addResourceInterceptor(it)
+            }
+        }
+
         //WebSettings
         if (webViewSetting == null) {
             webViewSetting = DefaultWebSettings(activity, cacheMode, isDebug)

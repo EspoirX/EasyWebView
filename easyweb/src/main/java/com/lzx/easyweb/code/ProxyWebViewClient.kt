@@ -231,7 +231,8 @@ class ProxyWebViewClient(
             return webViewCacheManager?.requestResource(
                 request,
                 cacheMode,
-                webView.settings.userAgentString
+                webView.settings.userAgentString,
+                webView.url
             )
         }
         return null

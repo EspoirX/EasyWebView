@@ -17,15 +17,17 @@ class WebViewCacheManager constructor(private val context: Context) {
     fun requestResource(
         webResourceRequest: WebResourceRequest?,
         cacheMode: WebCacheMode?,
-        userAgent: String
+        userAgent: String,
+        requestUrl: String
     ): WebResourceResponse? {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val url = webResourceRequest?.url.toString()
             val extension = CacheUtils.getFileExtensionFromUrl(url)
             val mimeType = CacheUtils.getMimeTypeFromExtension(extension)
 
             val cacheRequest = CacheRequest()
             cacheRequest.url = url
+            cacheRequest.requestUrl = requestUrl
             cacheRequest.mimeType = mimeType
             cacheRequest.userAgent = userAgent
             cacheRequest.webViewCacheMode = cacheMode

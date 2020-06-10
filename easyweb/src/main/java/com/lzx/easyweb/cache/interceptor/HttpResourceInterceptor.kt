@@ -7,6 +7,7 @@ import android.webkit.WebSettings
 import com.lzx.easyweb.BuildConfig
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.CacheConfig
+import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.utils.CacheUtils
 import okhttp3.*
 import java.io.File
@@ -63,7 +64,7 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
         val url = sourceRequest.url
         if (url.isNullOrEmpty()) return null
         val isCacheByOkHttp = sourceRequest.isCacheable
-        val cacheControl = getCacheControl(sourceRequest.webViewCache, isCacheByOkHttp)
+        val cacheControl = CacheControl.Builder().noStore().build()
         var userAgent = sourceRequest.userAgent
         if (userAgent.isNullOrEmpty()) {
             userAgent = DEFAULT_USER_AGENT
@@ -97,7 +98,7 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
             .cacheControl(cacheControl)
             .get()
             .build()
-        val response: Response
+        var response: Response
         try {
             val remoteResource = WebResource()
             response = mClient.newCall(request).execute()
@@ -107,44 +108,18 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
             } else {
                 Log.i(EasyWeb.TAG, String.format("http file from server: %s", url))
             }
-            if (response.code == HttpURLConnection.HTTP_OK ||
-                response.code == HttpURLConnection.HTTP_NOT_MODIFIED
-            ) {
-                val responseBody = response.body
-                if (responseBody != null) {
-                    remoteResource.responseCode = response.code
-                    remoteResource.message = response.message
-                    remoteResource.isModified =
-                        response.code != HttpURLConnection.HTTP_NOT_MODIFIED
-                    remoteResource.originBytes = responseBody.bytes()
-                    remoteResource.responseHeaders =
-                        CacheUtils.generateHeadersMap(response.headers)
-                    remoteResource.isCache = !isCacheByOkHttp
-                    return remoteResource
-                }
-            }
+            remoteResource.responseCode = response.code
+            remoteResource.message = response.message
+            remoteResource.isModified = response.code != HttpURLConnection.HTTP_NOT_MODIFIED
+            val responseBody = response.body
+            remoteResource.originBytes = responseBody?.bytes()
+            remoteResource.responseHeaders = CacheUtils.generateHeadersMap(response.headers)
+            remoteResource.isCache = !isCacheByOkHttp
+            return remoteResource
         } catch (e: IOException) {
             e.printStackTrace()
         }
         return null
     }
 
-    private fun getCacheControl(webViewCacheMode: Int, isCacheByOkHttp: Boolean): CacheControl {
-        return when (webViewCacheMode) {
-            WebSettings.LOAD_CACHE_ONLY -> CacheControl.FORCE_CACHE
-            WebSettings.LOAD_CACHE_ELSE_NETWORK -> {
-                if (!isCacheByOkHttp) {
-                    createNoStoreCacheControl()
-                } else CacheControl.Builder()
-                    .maxStale(Int.MAX_VALUE, TimeUnit.SECONDS).build()
-            }
-            WebSettings.LOAD_NO_CACHE -> CacheControl.FORCE_NETWORK
-            else -> if (isCacheByOkHttp) CacheControl.Builder()
-                .build() else createNoStoreCacheControl()
-        }
-    }
-
-    private fun createNoStoreCacheControl(): CacheControl {
-        return CacheControl.Builder().noStore().build()
-    }
 }

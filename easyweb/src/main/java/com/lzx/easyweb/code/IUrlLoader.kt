@@ -1,6 +1,6 @@
 package com.lzx.easyweb.code
 
-import com.lzx.easyweb.MainLooper
+import com.lzx.easyweb.utils.MainLooper
 
 interface IUrlLoader {
 
