@@ -3,11 +3,9 @@ package com.lzx.easyweb.cache.interceptor
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import android.webkit.WebSettings
 import com.lzx.easyweb.BuildConfig
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.CacheConfig
-import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.utils.CacheUtils
 import okhttp3.*
 import java.io.File
@@ -22,7 +20,6 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
     private val mClient: OkHttpClient
 
     companion object {
-        private const val HEADER_USER_AGENT = "User-Agent"
         private const val DEFAULT_USER_AGENT = "WebView" + BuildConfig.VERSION_NAME
     }
 
@@ -41,15 +38,6 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
                 CacheConfig.instance.connectTimeout.toLong(),
                 TimeUnit.MILLISECONDS
             )
-            .addNetworkInterceptor(object : Interceptor {
-                override fun intercept(chain: Interceptor.Chain): Response {
-                    val originResponse = chain.proceed(chain.request())
-                    return originResponse.newBuilder()
-                        .removeHeader("pragma")
-                        .removeHeader("Cache-Control")
-                        .header("Cache-Control", "max-age=86400").build()
-                }
-            })
             .build()
     }
 
@@ -63,8 +51,11 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
     private fun getResource(sourceRequest: SourceRequest): WebResource? {
         val url = sourceRequest.url
         if (url.isNullOrEmpty()) return null
-        val isCacheByOkHttp = sourceRequest.isCacheable
-        val cacheControl = CacheControl.Builder().noStore().build()
+        val isCacheByOkHttp = sourceRequest.isCacheAble
+
+        val cacheControl = if (isCacheByOkHttp) CacheControl.Builder().build() else
+            CacheControl.Builder().noStore().build()
+
         var userAgent = sourceRequest.userAgent
         if (userAgent.isNullOrEmpty()) {
             userAgent = DEFAULT_USER_AGENT
@@ -80,8 +71,8 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
             acceptLanguage += ",en-US;q=0.9"
         }
         val requestBuilder = Request.Builder()
-            .removeHeader(HEADER_USER_AGENT)
-            .addHeader(HEADER_USER_AGENT, userAgent)
+            .removeHeader("User-Agent")
+            .addHeader("User-Agent", userAgent)
             .addHeader("Upgrade-Insecure-Requests", "1")
             .addHeader("X-Requested-With", context.packageName)
             .addHeader("Accept", "*/*")
@@ -89,8 +80,11 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
         val headers = sourceRequest.headers
         if (headers != null && headers.isNotEmpty()) {
             for ((key, value) in headers) {
-                requestBuilder.removeHeader(key)
-                requestBuilder.addHeader(key, value)
+                val header: String = key
+                if (!isNeedStripHeader(header)) {
+                    requestBuilder.removeHeader(header)
+                    requestBuilder.addHeader(header, value)
+                }
             }
         }
         val request = requestBuilder
@@ -122,4 +116,16 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
         return null
     }
 
+    private fun isNeedStripHeader(headerName: String): Boolean {
+        return (headerName.equals("If-Match", ignoreCase = true)
+                || headerName.equals("If-None-Match", ignoreCase = true)
+                || headerName.equals("If-Modified-Since", ignoreCase = true)
+                || headerName.equals("If-Unmodified-Since", ignoreCase = true)
+                || headerName.equals("Last-Modified", ignoreCase = true)
+                || headerName.equals("Expires", ignoreCase = true)
+                || headerName.equals("Cache-Control", ignoreCase = true))
+    }
+
+    override fun destroy() {
+    }
 }

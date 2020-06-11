@@ -1,4 +1,4 @@
-package com.lzx.easyweb.builder
+package com.lzx.easyweb.code
 
 import android.app.Activity
 import android.view.View
@@ -11,7 +11,6 @@ import androidx.annotation.LayoutRes
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.cache.interceptor.ResourceInterceptor
-import com.lzx.easyweb.code.*
 import com.lzx.easyweb.js.IJsInterface
 import com.lzx.easyweb.js.JsInterfaceImpl
 import com.lzx.easyweb.js.WebTimesJsInterface

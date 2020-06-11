@@ -268,4 +268,8 @@ class ProxyWebViewClient(
     fun addResourceInterceptor(interceptor: ResourceInterceptor?) {
         webViewCacheManager?.addResourceInterceptor(interceptor)
     }
+
+    fun destroy() {
+        webViewCacheManager?.destroy()
+    }
 }

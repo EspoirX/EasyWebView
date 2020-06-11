@@ -4,7 +4,7 @@ import android.app.Activity
 import android.os.Build
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
-import com.lzx.easyweb.builder.WebBuilder
+import com.lzx.easyweb.code.WebBuilder
 import com.lzx.easyweb.code.WebValueCallback
 
 class EasyWeb(private val builder: WebBuilder) {
@@ -102,5 +102,4 @@ class EasyWeb(private val builder: WebBuilder) {
         getJsLoader()?.loadJs(method, callback)
         return this
     }
-
 }

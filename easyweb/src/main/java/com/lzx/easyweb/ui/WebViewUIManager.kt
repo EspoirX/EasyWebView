@@ -21,7 +21,7 @@ class WebViewUIManager internal constructor(
     private var viewGroup: ViewGroup? = builder.viewGroup
     private var layoutParams: ViewGroup.LayoutParams? = builder.layoutParams
     private val index: Int = builder.index
-    var errorView: View? = builder.errorView
+    private var errorView: View? = builder.errorView
 
     @LayoutRes
     var errorLayout = builder.errorLayout

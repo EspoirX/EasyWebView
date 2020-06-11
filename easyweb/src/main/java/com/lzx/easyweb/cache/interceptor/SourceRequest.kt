@@ -3,7 +3,7 @@ package com.lzx.easyweb.cache.interceptor
 import com.lzx.easyweb.cache.CacheRequest
 
 class SourceRequest(
-    request: CacheRequest, var isCacheable: Boolean
+    request: CacheRequest, var isCacheAble: Boolean
 ) {
     var url: String? = request.url
     var headers: Map<String, String>? = request.headers

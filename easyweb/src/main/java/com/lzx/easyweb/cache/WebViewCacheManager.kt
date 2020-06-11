@@ -108,8 +108,13 @@ class WebViewCacheManager constructor(private val context: Context) {
         return WebResourceResponse(urlMime, charset, bis)
     }
 
-
     fun addResourceInterceptor(interceptor: ResourceInterceptor?) {
         interceptors.add(interceptor)
+    }
+
+    fun destroy() {
+        interceptors.forEach {
+            it?.destroy()
+        }
     }
 }

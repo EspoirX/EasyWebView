@@ -3,7 +3,6 @@ package com.lzx.easyweb.code
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
-import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +14,7 @@ import androidx.annotation.RequiresApi
 import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.cache.interceptor.ResourceInterceptor
 import com.lzx.easyweb.ui.WebViewUIManager
+import com.lzx.easyweb.utils.MainLooper
 import java.lang.reflect.Field
 
 
@@ -154,7 +154,7 @@ class AndroidWebView : WebView,
 
     override fun onWebDestroy() {
         resumeTimers()
-        if (Looper.myLooper() != Looper.getMainLooper()) {
+        if (MainLooper.instance.isInMainThread()) {
             return
         }
         stopLoading()
@@ -170,6 +170,7 @@ class AndroidWebView : WebView,
         this.webViewClient = null
         this.tag = null
         clearHistory()
+        proxyWebViewClient?.destroy()
         destroy()
     }
 

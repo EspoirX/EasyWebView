@@ -1,7 +1,7 @@
 package com.lzx.easyweb.cache
 
 
-import android.os.Environment
+import android.content.Context
 import com.lzx.easyweb.utils.CacheUtils
 import java.io.File
 
@@ -13,6 +13,7 @@ class CacheConfig {
         }
     }
 
+    var context: Context? = null
     var connectTimeout = 5000
     var readTimeout = 15000
     var cacheSize = 100 * 1024 * 1024.toLong()
@@ -20,8 +21,7 @@ class CacheConfig {
     var memCacheSize: Int = CacheUtils.getMemorySize()
     var cacheFileLists = mutableListOf<String>()
     var ignoreUrl = mutableListOf<String>()
-    var defaultCachePath =
-        Environment.getExternalStorageDirectory().absolutePath + "/000/WebViewCache"
+    var defaultCachePath = context?.cacheDir?.absolutePath + File.separator + "WebViewCache"
 
     fun getCacheDir(): File? {
         val file = File(defaultCachePath.trim { it <= ' ' })
@@ -32,7 +32,7 @@ class CacheConfig {
     }
 
     fun isCacheFile(extension: String): Boolean {
-        if (cacheFileLists.isEmpty()){
+        if (cacheFileLists.isEmpty()) {
             return extension.isNotEmpty()
         }
         return cacheFileLists.contains(extension)

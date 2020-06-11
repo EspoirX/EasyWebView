@@ -41,14 +41,21 @@ class DiskResourceInterceptor : ResourceInterceptor {
         return webResource
     }
 
+    override fun destroy() {
+        if (mDiskLruCache?.isClosed == false) {
+            try {
+                mDiskLruCache?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     private var requestUrl = ""
 
     @Synchronized
     private fun createDiskLruCache(request: CacheRequest?) {
-        Log.i(
-            "XIAN",
-            "requestUrl = " + requestUrl + " request?.requestUrl = " + request?.requestUrl
-        )
+
         if (requestUrl != request?.requestUrl) {
             mDiskLruCache = null
         }
