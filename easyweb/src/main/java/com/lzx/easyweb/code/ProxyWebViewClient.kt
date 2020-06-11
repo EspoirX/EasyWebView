@@ -226,7 +226,7 @@ class ProxyWebViewClient(
             val response = mDelegate!!.shouldInterceptRequest(view, request)
             return response ?: super.shouldInterceptRequest(view, request)
         }
-        if (cacheMode != WebCacheMode.NOCACHE && cacheMode != WebCacheMode.DEFAULT) {
+        if (cacheMode == WebCacheMode.CACHE_RES) {
             return loadFromWebViewCache(request)
         }
         return super.shouldInterceptRequest(view, request)
