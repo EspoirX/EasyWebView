@@ -102,6 +102,7 @@ class AndroidWebView : WebView,
         } else {
             this.loadUrl(url, headers)
         }
+        proxyWebViewClient?.setRequestUrl(url)
     }
 
     override fun reloadUrl() {

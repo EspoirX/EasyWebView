@@ -11,12 +11,15 @@ import android.view.KeyEvent
 import android.webkit.*
 import androidx.annotation.RequiresApi
 import com.lzx.easyweb.EasyWeb
+import com.lzx.easyweb.cache.CacheConfig
 import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.cache.WebViewCacheManager
 import com.lzx.easyweb.cache.interceptor.ResourceInterceptor
 import com.lzx.easyweb.js.WebTimesJsInterface
 import com.lzx.easyweb.ui.WebViewParentLayout
 import com.lzx.easyweb.ui.WebViewUIManager
+import com.lzx.easyweb.utils.CacheUtils
+import java.util.*
 
 class ProxyWebViewClient(
     private val webView: WebView,
@@ -30,9 +33,15 @@ class ProxyWebViewClient(
     private val waitLoadUrls = mutableListOf<String>()
     private var cacheMode: WebCacheMode? = null
     private var webViewCacheManager: WebViewCacheManager? = null
+    private var userAgentString = webView.settings.userAgentString
+    private var requestUrl = webView.url
 
     fun setUpProxyClient(webViewClient: WebViewClient?) {
         mDelegate = webViewClient
+    }
+
+    fun setRequestUrl(url: String?) {
+        this.requestUrl = url
     }
 
     override fun onTooManyRedirects(view: WebView?, cancelMsg: Message?, continueMsg: Message?) {
@@ -225,17 +234,25 @@ class ProxyWebViewClient(
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun loadFromWebViewCache(request: WebResourceRequest?): WebResourceResponse? {
+        val url = request?.url.toString()
         val scheme = request?.url?.scheme?.trim()
-        val method = request?.method?.trim()?.toLowerCase()
-        if (scheme?.startsWith("http") == true && method == "get") {
-            return webViewCacheManager?.requestResource(
-                request,
-                cacheMode,
-                webView.settings.userAgentString,
-                webView.url
-            )
+        val method = request?.method?.trim()?.toLowerCase(Locale.getDefault())
+        val extension = CacheUtils.getFileExtensionFromUrl(url) ?: return null
+        if (scheme.isNullOrEmpty() || !scheme.startsWith("http") || method != "get") {
+            return null
         }
-        return null
+        if (CacheConfig.instance.isIgnoreUrl(url)) {
+            return null
+        }
+        if (!CacheConfig.instance.isCacheFile(extension)) {
+            return null
+        }
+        return webViewCacheManager?.requestResource(
+            request,
+            cacheMode,
+            userAgentString,
+            requestUrl
+        )
     }
 
     override fun shouldInterceptRequest(view: WebView?, url: String?): WebResourceResponse? {

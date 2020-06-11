@@ -6,12 +6,16 @@ import java.net.URLEncoder
 class CacheRequest {
     var key: String? = null
         private set
+
     var url: String? = null
         set(url) {
             field = url
             key = generateKey(url)
         }
+
     var requestUrl: String? = null
+        get() = generateKey(field)
+
     var mimeType: String? = null
     var headers: Map<String, String>? = null
     var userAgent: String? = null

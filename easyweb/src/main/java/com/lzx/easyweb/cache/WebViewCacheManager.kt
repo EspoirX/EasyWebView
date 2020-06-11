@@ -18,7 +18,7 @@ class WebViewCacheManager constructor(private val context: Context) {
         webResourceRequest: WebResourceRequest?,
         cacheMode: WebCacheMode?,
         userAgent: String,
-        requestUrl: String
+        requestUrl: String?
     ): WebResourceResponse? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val url = webResourceRequest?.url.toString()

@@ -45,6 +45,10 @@ class DiskResourceInterceptor : ResourceInterceptor {
 
     @Synchronized
     private fun createDiskLruCache(request: CacheRequest?) {
+        Log.i(
+            "XIAN",
+            "requestUrl = " + requestUrl + " request?.requestUrl = " + request?.requestUrl
+        )
         if (requestUrl != request?.requestUrl) {
             mDiskLruCache = null
         }
@@ -59,6 +63,7 @@ class DiskResourceInterceptor : ResourceInterceptor {
         val cacheSize = CacheConfig.instance.cacheSize
         try {
             mDiskLruCache = DiskLruCache.open(File(dir), version.toInt(), ENTRY_COUNT, cacheSize)
+            requestUrl = request?.requestUrl ?: ""
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -110,6 +115,7 @@ class DiskResourceInterceptor : ResourceInterceptor {
     }
 
     private fun isRealMimeTypeCacheable(resource: WebResource?): Boolean {
+
         if (resource == null) {
             return false
         }

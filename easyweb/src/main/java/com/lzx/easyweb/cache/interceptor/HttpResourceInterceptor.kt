@@ -98,7 +98,7 @@ class HttpResourceInterceptor(private val context: Context) : ResourceIntercepto
             .cacheControl(cacheControl)
             .get()
             .build()
-        var response: Response
+        val response: Response
         try {
             val remoteResource = WebResource()
             response = mClient.newCall(request).execute()
