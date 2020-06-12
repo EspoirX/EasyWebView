@@ -21,8 +21,9 @@ import com.lzx.easyweb.ui.WebViewUIManager
 import com.lzx.easyweb.utils.CacheUtils
 import java.util.*
 
+
 class ProxyWebViewClient(
-    private val webView: WebView,
+    private val webView: IProxyWebView,
     private val uiManager: WebViewUIManager?,
     private val isDebug: Boolean
 ) : WebViewClient() {
@@ -33,8 +34,13 @@ class ProxyWebViewClient(
     private val waitLoadUrls = mutableListOf<String>()
     private var cacheMode: WebCacheMode? = null
     private var webViewCacheManager: WebViewCacheManager? = null
-    private var userAgentString = webView.settings.userAgentString
-    private var requestUrl = webView.url
+    private var userAgentString = webView.getWebSetting().userAgentString
+    private var requestUrl = webView.getWebUrl()
+    private var touchByUser = false
+    private var isLoadFinish = false //页面是否加载完毕
+    private val urlStack = Stack<String>() //URL栈
+    private var isLoading = false
+    private var urlBeforeRedirect: String? = null //记录重定向前的链接
 
     fun setUpProxyClient(webViewClient: WebViewClient?) {
         mDelegate = webViewClient
@@ -42,6 +48,22 @@ class ProxyWebViewClient(
 
     fun setRequestUrl(url: String?) {
         this.requestUrl = url
+    }
+
+    fun resetAllStateInternal(url: String?) {
+        if (!url.isNullOrEmpty() && url.startsWith("javascript:")) {
+            return
+        }
+        resetAllState()
+    }
+
+    // 加载url时重置touch状态
+    private fun resetAllState() {
+        touchByUser = false
+    }
+
+    fun setUpTouchByUser() {
+        touchByUser = true
     }
 
     override fun onTooManyRedirects(view: WebView?, cancelMsg: Message?, continueMsg: Message?) {
@@ -155,8 +177,68 @@ class ProxyWebViewClient(
         if (!waitLoadUrls.contains(url)) {
             url?.let { waitLoadUrls.add(it) }
         }
+        isLoadFinish = false
+        if (isLoading && urlStack.size > 0) {
+            //从url栈中取出栈顶的链接
+            urlBeforeRedirect = urlStack.pop()
+        }
+        recordUrl(url)
+        isLoading = true
+
         mDelegate?.onPageStarted(view, url, favicon) ?: return
         super.onPageStarted(view, url, favicon)
+    }
+
+    /**
+     * 记录非重定向链接.
+     * 并且控制相同链接链接不入栈
+     */
+    private fun recordUrl(url: String?) {
+        //判断当前url，是否和栈中栈顶部的url是否相同。如果不相同，则入栈操作
+        if (!url.isNullOrEmpty() && url != getUrl()) {
+            //如果重定向之前的链接不为空
+            if (!urlBeforeRedirect.isNullOrEmpty()) {
+                urlStack.push(urlBeforeRedirect)
+                urlBeforeRedirect = null
+            }
+        }
+    }
+
+    /**
+     * 获取最后停留页面的链接
+     */
+    private fun getUrl(): String = if (urlStack.size > 0) urlStack.peek() else ""
+
+    /**
+     * 出栈操作
+     */
+    private fun popUrl(): String = if (urlStack.size > 0) urlStack.pop() else ""
+
+    /**
+     * 是否可以回退操作
+     */
+    fun pageCanGoBack() = urlStack.size >= 2
+
+    fun pageGoBack(): Boolean {
+        //判断是否可以回退操作
+        if (pageCanGoBack()) {
+            //获取最后停留的页面url
+            val url = popBackUrl()
+            //如果不为空
+            if (!url.isNullOrEmpty()) {
+                webView.loadWebUrl(url)
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun popBackUrl(): String? {
+        if (urlStack.size >= 2) {
+            popUrl()
+            return popUrl()
+        }
+        return null
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {
@@ -176,6 +258,8 @@ class ProxyWebViewClient(
             webView.setRecycled(false)
             webView.clearHistory()
         }
+        isLoading = false
+        isLoadFinish = true
         mDelegate?.onPageFinished(view, url) ?: return
         super.onPageFinished(view, url)
     }
@@ -193,19 +277,30 @@ class ProxyWebViewClient(
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-        if (mDelegate != null) {
-            return mDelegate!!.shouldOverrideUrlLoading(view, request)
+        val handleByChild = mDelegate?.shouldOverrideUrlLoading(view, request) ?: false
+        return if (handleByChild) {
+            true
+        } else if (!touchByUser) {
+            super.shouldOverrideUrlLoading(view, request)
+        } else {
+            webView.loadWebUrl(request?.url.toString())
+            true
         }
-        view?.loadUrl(request?.url.toString())
-        return true
     }
 
+    //解决正常情况下的回退栈问题。
     override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-        if (mDelegate != null) {
-            return mDelegate!!.shouldOverrideUrlLoading(view, url)
+        val handleByChild = mDelegate?.shouldOverrideUrlLoading(view, url) ?: false
+        return if (handleByChild) {
+            true // 开放client接口给上层业务调用，如果返回true，表示业务已处理。
+        } else if (!touchByUser) {
+            // 如果业务没有处理，并且在加载过程中用户没有再次触摸屏幕，认为是301/302事件，直接交由系统处理。
+            super.shouldOverrideUrlLoading(view, url);
+        } else {
+            //否则，属于二次加载某个链接的情况，为了解决拼接参数丢失问题，重新调用loadUrl方法添加固有参数。
+            webView.loadWebUrl(url)
+            true
         }
-        view?.loadUrl(url)
-        return true
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -271,5 +366,8 @@ class ProxyWebViewClient(
 
     fun destroy() {
         webViewCacheManager?.destroy()
+        errorUrls.clear()
+        waitLoadUrls.clear()
+        urlStack.clear()
     }
 }

@@ -39,6 +39,8 @@ interface IProxyWebView : WebCacheOpenApi {
     fun clearWeb()
     fun clearHistory()
 
+    fun goWebBack(): Boolean
+
     fun setWebViewClient(webViewClient: WebViewClient?)
     fun setWebChromeClient(webChromeClient: WebChromeClient?)
     fun setOnWebViewLongClick(onWebViewLongClick: OnWebViewLongClick?)

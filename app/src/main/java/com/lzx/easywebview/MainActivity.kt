@@ -1,8 +1,6 @@
 package com.lzx.easywebview
 
-import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
@@ -10,16 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.CacheConfig
 import com.lzx.easyweb.cache.WebCacheMode
-import com.qw.soul.permission.SoulPermission
-import com.qw.soul.permission.bean.Permission
-import com.qw.soul.permission.bean.Permissions
-import com.qw.soul.permission.callbcak.CheckRequestPermissionsListener
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
 
     private var url = "https://github.com/"
+    private var easyWeb: EasyWeb? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +32,7 @@ class MainActivity : AppCompatActivity() {
         errorView.text = "出错了"
 
 
-
-
-        EasyWeb.with(this@MainActivity)
+        easyWeb = EasyWeb.with(this@MainActivity)
             .setWebParent(webViewLayout)
             .debug(true)
             .lifecycle(this@MainActivity.lifecycle)
@@ -48,5 +41,9 @@ class MainActivity : AppCompatActivity() {
             .loadUrl(url)
     }
 
-
+    override fun onBackPressed() {
+        if (easyWeb?.goBack() == false) {
+            super.onBackPressed()
+        }
+    }
 }

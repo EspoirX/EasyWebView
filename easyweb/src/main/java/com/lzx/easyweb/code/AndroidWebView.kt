@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
@@ -18,7 +19,7 @@ import com.lzx.easyweb.utils.MainLooper
 import java.lang.reflect.Field
 
 
-class AndroidWebView @JvmOverloads constructor(
+open class AndroidWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = -1
@@ -85,10 +86,12 @@ class AndroidWebView @JvmOverloads constructor(
             this.loadUrl(url, headers)
         }
         proxyWebViewClient?.setRequestUrl(url)
+        proxyWebViewClient?.resetAllStateInternal(url)
     }
 
     override fun reloadUrl() {
         this.reload()
+        proxyWebViewClient?.resetAllStateInternal(getWebUrl())
     }
 
     override fun stopLoadingUrl() {
@@ -96,11 +99,13 @@ class AndroidWebView @JvmOverloads constructor(
     }
 
     override fun posWebUrl(url: String?, params: ByteArray?) {
-        this.posWebUrl(url, params)
+        this.postUrl(url, params)
+        proxyWebViewClient?.resetAllStateInternal(url)
     }
 
     override fun loadWebData(data: String?, mimeType: String?, encoding: String?) {
         this.loadData(data, mimeType, encoding)
+        proxyWebViewClient?.resetAllStateInternal(getWebUrl())
     }
 
     override fun loadWebDataWithBaseURL(
@@ -111,6 +116,14 @@ class AndroidWebView @JvmOverloads constructor(
         historyUrl: String?
     ) {
         this.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl)
+        proxyWebViewClient?.resetAllStateInternal(getWebUrl())
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event?.action == MotionEvent.ACTION_DOWN) {
+            proxyWebViewClient?.setUpTouchByUser()   //用户按下到下一个链接加载之前，置为true
+        }
+        return super.onTouchEvent(event)
     }
 
     override fun loadJs(js: String?) = this.loadUrl(js)
@@ -198,7 +211,6 @@ class AndroidWebView @JvmOverloads constructor(
         }
     }
 
-
     override fun clearWeb() {
         stopLoading()
         this.loadUrl("")
@@ -261,7 +273,22 @@ class AndroidWebView @JvmOverloads constructor(
     }
 
     override fun canGoBack(): Boolean {
-        return !recycled && super.canGoBack()
+        var pageCanGoBack = proxyWebViewClient?.pageCanGoBack() == true
+        if (!pageCanGoBack) {
+            pageCanGoBack = super.canGoBack()
+        }
+        return !recycled && pageCanGoBack
+    }
+
+    override fun goWebBack(): Boolean {
+        return if (canGoBack()) {
+            if (proxyWebViewClient?.pageGoBack() == false) {
+                goBack()
+            }
+            true
+        } else {
+            false
+        }
     }
 
     fun isRecycled(): Boolean {

@@ -123,4 +123,6 @@ class EasyWeb(private val builder: WebBuilder) : LifecycleObserver {
         getJsLoader()?.loadJs(method, callback)
         return this
     }
+
+    fun goBack() = getProxyWebView()?.goWebBack()
 }
