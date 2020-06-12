@@ -234,4 +234,4 @@ addErrorView 除了传入 view 之外，还可以传入 layoutId，和 url。
 # 其他方法
 EasyWeb 除了以上一些配置，通过 EasyWeb 对象你也可以获得很多东西，具体可以查看 EasyWeb 这个类的实现哦。
 
-EasyWeb 期待你的意见，喜欢就点个 star 把。^_^
+EasyWeb 是参考了很多优秀的 WebView 库之后产生的，感谢这些开源库。期待你的意见，喜欢就点个 star 把。^_^
