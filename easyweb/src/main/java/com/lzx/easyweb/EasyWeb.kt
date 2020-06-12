@@ -4,10 +4,13 @@ import android.app.Activity
 import android.os.Build
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import com.lzx.easyweb.code.WebBuilder
 import com.lzx.easyweb.code.WebValueCallback
 
-class EasyWeb(private val builder: WebBuilder) {
+class EasyWeb(private val builder: WebBuilder) : LifecycleObserver {
 
     companion object {
         const val TAG = "EasyWeb_"
@@ -25,6 +28,24 @@ class EasyWeb(private val builder: WebBuilder) {
     init {
         startTime = SystemClock.uptimeMillis()
         initStartTime = SystemClock.uptimeMillis()
+        builder.lifecycle?.get()?.removeObserver(this)
+        builder.lifecycle?.get()?.addObserver(this)
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onResume() {
+        getProxyWebView()?.onWebResume()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun onPause() {
+        getProxyWebView()?.onWebPause()
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onDestroy() {
+        getJsInterface()?.clearJsInterface()
+        getProxyWebView()?.onWebDestroy()
     }
 
     fun getWebView() = builder.view

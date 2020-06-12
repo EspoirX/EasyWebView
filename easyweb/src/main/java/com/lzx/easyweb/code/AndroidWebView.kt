@@ -18,33 +18,15 @@ import com.lzx.easyweb.utils.MainLooper
 import java.lang.reflect.Field
 
 
-class AndroidWebView : WebView,
+class AndroidWebView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = -1
+) : WebView(context, attrs, defStyleAttr),
     IProxyWebView,
     View.OnLongClickListener {
 
-    constructor(context: Context) : super(context) {
-        initWebView()
-    }
-
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        initWebView()
-    }
-
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    ) {
-        initWebView()
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    constructor(
-        context: Context?,
-        attrs: AttributeSet?,
-        defStyleAttr: Int,
-        defStyleRes: Int
-    ) : super(context, attrs, defStyleAttr, defStyleRes) {
+    init {
         initWebView()
     }
 
@@ -166,6 +148,7 @@ class AndroidWebView : WebView,
             val viewGroup = parent as ViewGroup
             viewGroup.removeAllViews()
         }
+        this.onWebViewLongClick = null
         this.webChromeClient = null
         this.webViewClient = null
         this.tag = null

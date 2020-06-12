@@ -8,6 +8,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
+import androidx.lifecycle.Lifecycle
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.cache.interceptor.ResourceInterceptor
@@ -54,11 +55,12 @@ class WebBuilder(activity: Activity) {
 
     @LayoutRes
     internal var errorLayout = -1
-
     private var errorUrl = ""
 
     @IdRes
     internal var reloadViewId = -1
+
+    internal var lifecycle: WeakReference<Lifecycle>? = null
 
     fun setWebParent(
         v: ViewGroup,
@@ -125,6 +127,12 @@ class WebBuilder(activity: Activity) {
 
     fun addResourceInterceptor(interceptor: ResourceInterceptor?) = apply {
         this.interceptors.add(interceptor)
+    }
+
+    fun lifecycle(lifecycle: Lifecycle?) = apply {
+        lifecycle?.let {
+            this.lifecycle = WeakReference(it)
+        }
     }
 
     fun debug(isDebug: Boolean) = apply {
