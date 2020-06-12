@@ -9,6 +9,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import com.lzx.easyweb.code.WebBuilder
 import com.lzx.easyweb.code.WebValueCallback
+import com.lzx.easyweb.js.BaseJavascriptInterface
 
 class EasyWeb(private val builder: WebBuilder) : LifecycleObserver {
 
@@ -59,6 +60,7 @@ class EasyWeb(private val builder: WebBuilder) : LifecycleObserver {
     fun getOnWebViewLongClick() = builder.onWebViewLongClick
     fun getWebViewSetting() = builder.webViewSetting?.getWebSetting()
     fun getJsInterface() = builder.jsInterface
+    fun getJsInterface(key: String) = getJsInterface()?.getJsInterface(key)
     fun getUrlLoader() = builder.urlLoader
     fun getJsLoader() = builder.jsLoader
     fun isDebug() = builder.isDebug
@@ -66,62 +68,51 @@ class EasyWeb(private val builder: WebBuilder) : LifecycleObserver {
     fun loadUrl(
         url: String?,
         headers: Map<String?, String?>? = null
-    ): EasyWeb {
-        getUrlLoader()?.loadUrl(url, headers)
-        return this
-    }
+    ) = apply { getUrlLoader()?.loadUrl(url, headers) }
 
-    fun reload(): EasyWeb {
-        getUrlLoader()?.reload()
-        return this
-    }
+    fun reload() = apply { getUrlLoader()?.reload() }
 
-    fun stopLoading(): EasyWeb {
-        getUrlLoader()?.stopLoading()
-        return this
-    }
+    fun stopLoading() = apply { getUrlLoader()?.stopLoading() }
 
-    fun postUrl(url: String?, params: ByteArray?): EasyWeb {
-        getUrlLoader()?.postUrl(url, params)
-        return this
-    }
+    fun postUrl(url: String?, params: ByteArray?) = apply { getUrlLoader()?.postUrl(url, params) }
 
     fun loadData(
         data: String?,
         mimeType: String?,
         encoding: String?
-    ): EasyWeb {
-        getUrlLoader()?.loadData(data, mimeType, encoding)
-        return this
-    }
+    ) = apply { getUrlLoader()?.loadData(data, mimeType, encoding) }
 
     fun loadDataWithBaseURL(
         baseUrl: String?, data: String?,
         mimeType: String?, encoding: String?, historyUrl: String?
-    ): EasyWeb {
-        getUrlLoader()?.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl)
-        return this
-    }
+    ) = apply { getUrlLoader()?.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl) }
 
     @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun loadJs(
         method: String?,
         callback: WebValueCallback<String?>? = null,
         vararg params: Any?
-    ): EasyWeb {
-        getJsLoader()?.loadJs(method, callback, params)
-        return this
-    }
+    ) = apply { getJsLoader()?.loadJs(method, callback, params) }
 
-    fun loadJs(method: String?, vararg params: Any?): EasyWeb {
-        getJsLoader()?.loadJs(method, params)
-        return this
-    }
+    fun loadJs(method: String?, vararg params: Any?) =
+        apply { getJsLoader()?.loadJs(method, params) }
 
     @RequiresApi(Build.VERSION_CODES.KITKAT)
-    fun loadJs(method: String?, callback: WebValueCallback<String?>? = null): EasyWeb {
-        getJsLoader()?.loadJs(method, callback)
-        return this
+    fun loadJs(method: String?, callback: WebValueCallback<String?>? = null) =
+        apply { getJsLoader()?.loadJs(method, callback) }
+
+    fun addJsInterface(obj: BaseJavascriptInterface, name: String) = apply {
+        if (getJsInterface() == null) {
+            throw IllegalArgumentException("addJsInterface 方法要在 ready 方法后调用")
+        }
+        getJsInterface()?.addJsInterface(obj, name)
+    }
+
+    fun addJsInterfaces(maps: Map<String, BaseJavascriptInterface>) = apply {
+        if (getJsInterface() == null) {
+            throw IllegalArgumentException("addJsInterfaces 方法要在 ready 方法后调用")
+        }
+        getJsInterface()?.addJsInterfaces(maps)
     }
 
     fun goBack() = getProxyWebView()?.goWebBack()

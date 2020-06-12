@@ -23,13 +23,24 @@ class CacheConfig {
     var ignoreUrl = mutableListOf<String>()
     var defaultCachePath = context?.cacheDir?.absolutePath + File.separator + "WebViewCache"
 
-    fun getCacheDir(): File? {
-        val file = File(defaultCachePath.trim { it <= ' ' })
-        if (!file.exists()) {
-            file.mkdir()
+    var cacheFile: File? = null
+
+    fun getCacheDirectory(destFileDir: String?): File? {
+        if (cacheFile == null && !destFileDir.isNullOrEmpty()) {
+            cacheFile = File(destFileDir)
+            if (cacheFile?.exists() == false) {
+                cacheFile?.mkdirs()
+            }
         }
-        return file
+        if (cacheFile == null) {
+            cacheFile = context?.getExternalFilesDir(null)
+            if (cacheFile == null) {
+                cacheFile = context?.filesDir
+            }
+        }
+        return cacheFile
     }
+
 
     fun isCacheFile(extension: String): Boolean {
         if (cacheFileLists.isEmpty()) {

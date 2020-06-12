@@ -59,7 +59,8 @@ class DiskResourceInterceptor : ResourceInterceptor {
         if (requestUrl != request?.requestUrl) {
             mDiskLruCache = null
         }
-        var dir = CacheConfig.instance.defaultCachePath
+        val file = CacheConfig.instance.getCacheDirectory(null)
+        var dir = file?.absolutePath + File.separator + "WebViewCache"
         if (!request?.requestUrl.isNullOrEmpty()) {
             dir += "/" + request?.requestUrl
         }

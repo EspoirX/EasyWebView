@@ -12,6 +12,7 @@ import androidx.lifecycle.Lifecycle
 import com.lzx.easyweb.EasyWeb
 import com.lzx.easyweb.cache.WebCacheMode
 import com.lzx.easyweb.cache.interceptor.ResourceInterceptor
+import com.lzx.easyweb.js.BaseJavascriptInterface
 import com.lzx.easyweb.js.IJsInterface
 import com.lzx.easyweb.js.JsInterfaceImpl
 import com.lzx.easyweb.js.WebTimesJsInterface
