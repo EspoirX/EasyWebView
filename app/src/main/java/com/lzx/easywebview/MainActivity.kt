@@ -13,7 +13,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-//    private var url = "file:///android_asset/demo.html"
+    //    private var url = "file:///android_asset/demo.html"
     private var url = "https://www.bilibili.com/"
     private var easyWeb: EasyWeb? = null
 
@@ -31,15 +31,29 @@ class MainActivity : AppCompatActivity() {
         )
         errorView.gravity = Gravity.CENTER
         errorView.text = "出错了"
-
-        easyWeb = EasyWeb.with(this@MainActivity)
+        EasyWeb.with(this@MainActivity)
             .setWebParent(webViewLayout)
-            .debug(true)
-            .lifecycle(this@MainActivity.lifecycle)
-            .setWebCacheMode(WebCacheMode.CACHE_RES)
             .ready()
-            .addJsInterface(JsInterfaceTest(), "WebViewJavascriptBridge")
-            .loadUrl(url)
+            .loadUrl("https://www.bilibili.com/")
+
+        easyWeb?.addJsInterface(JsInterfaceTest(), "WebViewJavascriptBridge")
+
+
+        //添加指定缓存文件
+        CacheConfig.instance
+            .addCacheFile("html")
+            .addCacheFile("js")
+            .addCacheFile("css")
+            .addCacheFile("jpg")
+            .addCacheFile("png")
+            .addCacheFile("gif")
+        //添加缓存白名单
+        CacheConfig.instance
+            .addIgnoreUrl("baidu")
+            .addIgnoreUrl("taobao")
+            .addIgnoreUrl("wxpay")
+            .addIgnoreUrl("alipay")
+
     }
 
     override fun onBackPressed() {
